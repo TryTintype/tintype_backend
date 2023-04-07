@@ -1,0 +1,22 @@
+{
+  "name": "tin-type-backend",
+  "version": "1.0.0",
+  "description": "backend for the tintype plugin",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TryTintype/tintype_backend.git"
+  },
+  "keywords": [
+    "tintype"
+  ],
+  "author": "Ekaji Onah",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TryTintype/tintype_backend/issues"
+  },
+  "homepage": "https://github.com/TryTintype/tintype_backend#readme"
+}

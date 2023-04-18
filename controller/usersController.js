@@ -1,5 +1,8 @@
 const User = require("../models/userModels")
 const bcrypt = require("bcrypt")
+const express = require("express")
+
+const app = express()
 
 module.exports.register = async (req, res, next) => {
     try {
@@ -89,5 +92,22 @@ module.exports.getAllUsers = async (req, res, next) => {
         
     } catch (err) {
         next(err)
+    }
+}
+
+module.exports.getUser = async (req, res, next) => {
+
+    try {
+        const email = req.params.email // before hitting production encrypt the email and decrypt here
+        const current_user = await User.findOne({ email }) 
+        
+        if (current_user === null || current_user === undefined) {
+            res.status(400).json({ error: "User not found" });
+          } else {
+            res.status(200).json(current_user);
+          }
+
+    } catch (err) {
+        console.log(err)
     }
 }

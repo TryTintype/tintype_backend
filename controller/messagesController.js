@@ -1,39 +1,46 @@
 const messageModel = require("../models/messageModels")
 
-module.exports.addMessage = async (req, res, next) => { 
+module.exports.addMessage = async (req, res, next) => {
     try {
-        const { from, to, message } = req.body
+        const {from, to, message} = req.body
 
         const data = messageModel.create({
-            message: { text: message },
-            users: [ from, to],
+            message: {
+                text: message
+            },
+            users: [
+                from, to
+            ],
             sender: from
         })
 
-        if (!data) return res.status(400).json({ message: "failed to add message" })
+        if (! data) 
+            return res.status(400).json({message: "failed to add message"})
+
         
+
         return res.status(201).json({message: "added message"})
 
     } catch (err) {
-        console.log(err)
+        next(err)
     }
 }
 
 module.exports.getAllMessages = async (req, res, next) => {
     try {
-        const { from, to } = req.body
+        const {from, to} = req.body
 
         console.log([from, to])
 
         const messages = await messageModel.find({
             users: {
-               $all: [from, to] 
+                $all: [from, to]
             }
-        }).sort({ updatedAt: 1 })
-        
+        }).sort({updatedAt: 1})
+
         const messagesToDisplay = messages.map((msg) => {
             return {
-                fromSelf: msg.sender.toString() === from, //compares and returns true or false
+                fromSelf: msg.sender.toString() === from, // compares and returns true or false
                 message: msg.message.text
             }
         })
@@ -42,4 +49,4 @@ module.exports.getAllMessages = async (req, res, next) => {
     } catch (err) {
         next(err)
     }
- }
+}

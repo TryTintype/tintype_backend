@@ -1,6 +1,6 @@
+const router = require("express").Router()
 const { register, login, setAvatar, getAllUsers, getUser } = require("../controller/usersController")
 
-const router = require("express").Router()
 
 router.post("/auth/register", register)
 router.post("/auth/login", login)

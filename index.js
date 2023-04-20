@@ -20,7 +20,11 @@ app.use(express.urlencoded({extended: false}));
 app.use("/api", usersRoute)
 app.use("/api/message", messagesRoutes)
 
-const uri = process.env.NODE_ENV === "development" ? process.env.MONGO_URL_DEV : process.env.MONGO_URL
+const uri =
+    // process.env.NODE_ENV === "development" ?
+    process.env.MONGO_URL_DEV
+    // :
+    // process.env.MONGO_URL
 
 mongoose.connect(uri, {
     useNewUrlParser: true,
@@ -34,31 +38,6 @@ app.get("/", (req, res,) => {
 
 const server = app.listen(port, () => {
     console.log(`server is listening on ${port}`)
-})
-
-const io = socket(server, {
-    cors: {
-        origin: `http://localhost:${port}`,
-        credentials: true
-    }
-})
-
-global.onlineUsers = new Map()
-
-io.on("connection", (socket) => {
-    global.ChatSocket = socket;
-
-    socket.on("add-user", (userId) => {
-        onlineUsers.set(userId, socket.id)
-    })
-
-    socket.on("send-msg", (data) => {
-        const sendUserSocket = onlineUsers.get(data.to)
-
-        if (sendUserSocket) {
-            socket.to(sendUserSocket).emit("msg-receive", data.msg)
-        }
-    })
 })
 
 module.exports = app

@@ -15,9 +15,7 @@ module.exports.addMessage = async (req, res, next) => {
         })
 
         if (! data) 
-            return res.status(400).json({message: "failed to add message"})
-
-        
+            return res.status(400).json({message: "failed to add message"})       
 
         return res.status(201).json({message: "added message"})
 
@@ -69,7 +67,7 @@ module.exports.getAllMessages = async (req, res, next) => {
       });
   
         console.log(messagesToDisplay)
-      res.status(200).json({ messagesToDisplay });
+    return res.status(200).json({ messagesToDisplay });
     } catch (err) {
       next(err);
     }

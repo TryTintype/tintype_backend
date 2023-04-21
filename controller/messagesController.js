@@ -55,7 +55,8 @@ module.exports.addMessage = async (req, res, next) => {
 
 module.exports.getAllMessages = async (req, res, next) => {
     try {
-        const {from, to} = req.body
+        const { from, to } = req.body
+        
         if (!from || !to) {
             return res.status(400).json({message: 'Missing from/to parameter(s)'});
         }
@@ -76,7 +77,8 @@ module.exports.getAllMessages = async (req, res, next) => {
             };
         });
 
-        return res.status(200).json({messagesToDisplay, messages});
+        return res.status(200).json(req.body);
+        // return res.status(200).json({messagesToDisplay, messages});
     } catch (err) {
         console.error(err);
         return res.status(500).json({message: 'Internal server error'});

@@ -75,7 +75,7 @@ module.exports.getAllMessages = async (req, res, next) => {
 
       console.log(req)
         // return res.status(200).json(req);
-        // return res.status(200).json({messagesToDisplay, messages});
+        return res.status(200).json({messagesToDisplay, messages});
     } catch (err) {
         console.error(err);
         return res.status(500).json({message: 'Internal server error'});

@@ -50,26 +50,31 @@ module.exports.addMessage = async (req, res, next) => {
 // }
 
 module.exports.getAllMessages = async (req, res, next) => {
-    try {
-        const {from, to} = req.body
+  try {
+      const { from, to } = req.body;
+      if (!from || !to) {
+          return res.status(400).json({ message: 'Missing from/to parameter(s)' });
+      }
+      const messages = await messageModel.find({
+          users: {
+              $all: [from, to]
+          }
+      }).sort({ updatedAt: 1 }).maxTimeMS(30000);
 
-        const messages = await messageModel.find({
-            users: {
-                $all: [from, to]
-            }
-        }).sort({updatedAt: 1}).maxTimeMS(30000);
+      if (!messages || messages.length === 0) {
+          return res.status(404).json({ message: 'No messages found' });
+      }
 
-        console.log({messages})
+      const messagesToDisplay = messages.map((msg) => {
+          return {
+              fromSelf: msg.sender.toString() === from,
+              message: msg.message.text
+          };
+      });
 
-        const messagesToDisplay = messages.map((msg) => {
-            return {
-                fromSelf: msg.sender.toString() === from,
-                message: msg.message.text
-            };
-        });
-      
-        return res.status(200).json({messagesToDisplay, messages});
-    } catch (err) {
-        next(err);
-    }
+      return res.status(200).json({ messagesToDisplay, messages });
+  } catch (err) {
+      console.error(err);
+      return res.status(500).json({ message: 'Internal server error' });
+  }
 };

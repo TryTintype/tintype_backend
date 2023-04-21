@@ -70,7 +70,7 @@ module.exports.getAllMessages = async (req, res, next) => {
   
       console.log({ messagesToDisplay })
       
-    return res.status(200).json({messagesToDisplay});
+    return res.status(200).json({messagesToDisplay, messages});
     } catch (err) {
       next(err);
     }

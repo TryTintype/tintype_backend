@@ -59,15 +59,18 @@ module.exports.getAllMessages = async (req, res, next) => {
         }
       }).sort({ updatedAt: 1 });
   
-      const messagesToDisplay = messages.map((msg) => {
-        return {
-          fromSelf: msg.sender.toString() === from,
-          message: msg.message.text,
-        };
-      });
+      // const messagesToDisplay = messages.map((msg) => {
+      //   return {
+      //     fromSelf: msg.sender.toString() === from,
+      //     message: msg.message.text,
+      //   };
+      // });
   
         console.log(messagesToDisplay)
-    return res.status(200).json({ messagesToDisplay });
+    return res.status(200).json({ messages: {
+      fromSelf: msg.sender.toString() === from,
+      message: msg.message.text,
+    } });
     } catch (err) {
       next(err);
     }

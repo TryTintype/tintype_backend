@@ -57,18 +57,18 @@ module.exports.getAllMessages = async (req, res, next) => {
     try {
         const { from, to } = req.body
         
-        if (!from || !to) {
-            return res.status(400).json({message: 'Missing from/to parameter(s)'});
-        }
+        // if (!from || !to) {
+        //     return res.status(400).json({message: 'Missing from/to parameter(s)'});
+        // }
         const messages = await messageModel.find({
             users: {
                 $all: [from, to]
             }
         }).sort({updatedAt: 1}).maxTimeMS(30000);
 
-        if (! messages || messages.length === 0) {
-            return res.status(404).json({message: 'No messages found'});
-        }
+        // if (! messages || messages.length === 0) {
+        //     return res.status(404).json({message: 'No messages found'});
+        // }
 
         const messagesToDisplay = messages.map((msg) => {
             return {

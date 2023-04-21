@@ -7,8 +7,6 @@ const messagesRoutes = require("./routes/messagesRoute")
 
 require("dotenv").config()
 
-const socket = require("socket.io")
-
 const port = process.env.PORT || 3000
 
 const app = express()
@@ -21,10 +19,10 @@ app.use("/api", usersRoute)
 app.use("/api/message", messagesRoutes)
 
 const uri =
-    // process.env.NODE_ENV === "development" ?
-    process.env.MONGO_URL_DEV
-    // :
-    // process.env.MONGO_URL
+// process.env.NODE_ENV === "development" ?
+// process.env.MONGO_URL_DEV
+// :
+process.env.MONGO_URL
 
 mongoose.connect(uri, {
     useNewUrlParser: true,

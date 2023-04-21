@@ -66,7 +66,7 @@ module.exports.getAllMessages = async (req, res, next) => {
       //   };
       // });
   
-        console.log(messagesToDisplay)
+        // console.log(messagesToDisplay)
     return res.status(200).json({ messages: {
       fromSelf: msg.sender.toString() === from,
       message: msg.message.text,

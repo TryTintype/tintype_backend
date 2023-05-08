@@ -17,6 +17,10 @@ module.exports.addMessage = async (req, res, next) => {
         if (! data) 
             return res.status(400).json({message: "failed to add message"})
 
+
+        
+
+
         return res.status(201).json({message: "added message"})
 
     } catch (err) {
@@ -73,7 +77,7 @@ module.exports.getAllMessages = async (req, res, next) => {
             };
         });
 
-      console.log(req)
+        console.log(req)
         // return res.status(200).json(req);
         return res.status(200).json({messagesToDisplay, messages});
     } catch (err) {

@@ -32,7 +32,7 @@ module.exports.uploadFile = async (req, res, next) => {
 
         const file = new File({
             file: fileData._id,
-            mimetype: "application/octet-stream",
+            mimetype: "application/octet-stream", // this should be dynamic
             length: size,
             checksum,
             uri: `/files/${uuidv4()}`

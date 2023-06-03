@@ -2,8 +2,6 @@ const User = require("../models/userModels")
 const bcrypt = require("bcrypt")
 const express = require("express")
 
-const app = express()
-
 module.exports.register = async (req, res, next) => {
     try {
         const {username, email, password} = req.body
@@ -11,15 +9,13 @@ module.exports.register = async (req, res, next) => {
         const userNameCheck = await User.findOne({username})
         const emailCheck = await User.findOne({email})
 
-        if (userNameCheck) 
+        if (userNameCheck)
             return res.json({message: "username already exists", status: false})
 
-        
 
-        if (emailCheck) 
+
+        if (emailCheck)
             return res.json({message: "email already exists", status: false})
-
-        
 
         const hashedPassword = await bcrypt.hash(password, 10)
 
@@ -40,12 +36,12 @@ module.exports.login = async (req, res, next) => {
         const user = await User.findOne({username})
         const isPasswordValid = bcrypt.compare(password, user.password)
 
-        if (! user) 
+        if (! user)
             return res.json({message: "incorrect username or password", status: false})
 
-        if (! isPasswordValid) 
+        if (! isPasswordValid)
             return res.json({message: "incorrect username or password", status: false})
-  
+
 
         delete user.password
         res.status(200).json({status: true, user})
@@ -60,12 +56,12 @@ module.exports.setAvatar = async (req, res, next) => {
         const userId = req.params.id
         const avatarImage = req.body.image
 
-        if (!userId) 
-            return res.json({message: "please login", status: false})      
+        if (!userId)
+            return res.json({message: "please login", status: false})
 
-        if (!avatarImage) 
+        if (!avatarImage)
             return res.json({ message: "please select an image", status: false })
-        
+
         const updateUserData = await User.findByIdAndUpdate(userId, {
             isAvatarImageSet: true,
             avatarImage
@@ -80,7 +76,7 @@ module.exports.setAvatar = async (req, res, next) => {
 
 
 module.exports.getAllUsers = async (req, res, next) => {
-    try {    
+    try {
         const allUsers = (await User.find({ _id: { $ne: req.params.id } }).select([
             "email",
             "username",
@@ -89,7 +85,7 @@ module.exports.getAllUsers = async (req, res, next) => {
         ]));
 
         return res.status(200).json(allUsers)
-        
+
     } catch (err) {
         next(err)
     }
@@ -99,8 +95,8 @@ module.exports.getUser = async (req, res, next) => {
 
     try {
         const email = req.params.email // before hitting production encrypt the email and decrypt here
-        const current_user = await User.findOne({ email }) 
-        
+        const current_user = await User.findOne({ email })
+
         if (current_user === null || current_user === undefined) {
             res.status(400).json({ error: "User not found" });
           } else {

@@ -2,10 +2,11 @@ const express = require('express');
 const router = express.Router();
 const multerMiddleware = require("../middlewares/multer")
 
-const { uploadFile, getFileByUri, getFileRefsByOwner } = require('../controller/newFileHandlerController')
+const { uploadFile, getFileByUri, getFileByID, getFileRefsByOwner } = require('../controller/newFileHandlerController')
 
-router.get('/file', getFileByUri)
-router.get('/file', getFileRefsByOwner)
+router.get('/file/:uri', getFileByUri)
+router.post('/fileId/:id', getFileByID)
+router.get('/file/owner', getFileRefsByOwner)
 router.post('/file/upload', multerMiddleware, uploadFile)
 
 // const {

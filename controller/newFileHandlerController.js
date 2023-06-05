@@ -60,9 +60,68 @@ module.exports.uploadFile = async (req, res, next) => {
     // return file;
 }
 
+
 module.exports.getFileByUri = async (req, res, next) => {
-    const uri = req.body.uri
-    return await File.findOne({uri}).populate('file');
+    const uri = req.params.uri
+    if (!uri) {
+       return res.status(400).json({message: 'please provide a valid uri'})
+    }
+
+    try {
+        const file = await File.findOne({ uri }).populate('file');
+        console.log({ uri: `/files/${uri}` })
+        if (!file) {
+            return res.status(404).json({message: 'file not found'})
+        }
+        return res.status(200).json(file);
+
+    } catch (err) {
+        res.status(400).json({message: 'an error occurred'})
+    }
+}
+
+// module.exports.getFileByUri = async (req, res, next) => {
+//     const uri = req.body.uri
+//     if (!uri) {
+//        return res.status(400).json({message: 'please provide a valid uri'})
+//     }
+
+//     try {
+//         const file = await File.findOne({ uri }).populate('file');
+
+//         if (!file) {
+//             return res.status(404).json({message: 'file not found'})
+//         }
+//         return res.json(file);
+
+//     } catch (err) {
+//         res.status(400).json({message: 'an error occurred'})
+//     }
+// }
+
+module.exports.getFileByID = async (req, res, next) => {
+    const _id = req.params.id
+    if (!_id) {
+       return res.status(400).json({message: 'please provide a valid id'})
+    }
+
+    console.log(_id)
+
+    try {
+        const file = await File.findOne({
+            _id: {
+                $ne: req.params.id
+            }
+        }).populate('file');
+
+        if (!file) {
+            return res.status(404).json({message: 'file not found'})
+        }
+        return res.json(file);
+
+    } catch (err) {
+        res.status(400).json({message: 'an error occurred'})
+    }
 }
 
 module.exports.getFileRefsByOwner = async (req, res, next,) => {

@@ -4,8 +4,8 @@ const mongoose = require("mongoose")
 
 const usersRoute = require("./routes/usersRoute")
 const messagesRoutes = require("./routes/messagesRoute")
-// const fileRoute = require("./routes/fileRoute")
-const newFileHandlerRoute = require("./routes/newFileHandlerRoute")
+const fileRoute = require("./routes/fileRoute")
+const fileHandlerRoute = require("./routes/fileHandlerRoute")
 
 require("dotenv").config()
 
@@ -19,11 +19,10 @@ app.use(express.urlencoded({extended: false}));
 
 app.use("/api", usersRoute)
 app.use("/api/message", messagesRoutes)
-app.use("/api", newFileHandlerRoute)
-// app.use("/api", fileRoute)
 // app.use("/api", fileHandlerRoute)
+app.use("/api", fileRoute)
 
-const uri =
+const uri = 
 // process.env.NODE_ENV === "development" ?
 process.env.MONGO_URL_DEV
 // :

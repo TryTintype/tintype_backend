@@ -1,113 +1,68 @@
-const User = require("../models/userModels")
-const bcrypt = require("bcrypt")
-const express = require("express")
+// controllers/authController.js
+const bcrypt = require('bcrypt');
+const Users = require('../models/userModels');
 
 module.exports.register = async (req, res, next) => {
     try {
-        const {username, email, password} = req.body
+      const { username, email, password } = req.body;
 
-        const userNameCheck = await User.findOne({username})
-        const emailCheck = await User.findOne({email})
+        // console.log({ username, email, password })
+      // Check if username already exists
+        const existingUsername = await Users.findOne({ username });
+        console.log({existingUsername})
+      if (existingUsername) {
+        return res.status(400).json({ message: 'Username already exists' });
+      }
 
-        if (userNameCheck) {
-            return res.json({message: "username already exists", status: false})
-        }
+      // Check if email already exists
+      const existingEmail = await Users.findOne({ email });
+      if (existingEmail) {
+        return res.status(400).json({ message: 'Email already exists' });
+      }
 
-        if (emailCheck) {
-            return res.json({message: "email already exists", status: false})
-        }
+      // Hash password
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
 
-        const hashedPassword = await bcrypt.hash(password, 10)
-        const user = await User.create({email, username, password: hashedPassword})
+      // Create new user
+      const newUser = new Users({
+        username,
+        email,
+        password: hashedPassword
+      });
 
-        delete User.password
-        res.status(201).json({status: true, user})
-    } catch (err) {
-        console.log({err})
-        next(err)
+      const savedUser = await newUser.save();
+      res.status(201).json({ message: 'New user created' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Error registering user' });
     }
-}
+  };
+
 
 module.exports.login = async (req, res, next) => {
-    try {
-        const {username, password} = req.body
+  try {
+    const { email, password, username } = req.body;
+    console.log({ username, email, password })
+      // Check if user exists
 
-        const user = await User.findOne({username})
-        if (!user) {
-            return res.status(400).json({message: "username not found", status: false})
-        }
+   // Determine the login identifier (username or email)
+   const loginIdentifier = username ? { username } : { email };
 
-        const isPasswordValid = await bcrypt.compare(password, user.password)
-        if (!isPasswordValid) {
-            return res.status(400).json({message: "incorrect password", status: false})
-        }
-
-        delete user.password
-        res.status(200).json({status: true, user})
-    } catch (err) {
-        console.log(err)
-        res.status(500).json({message: "server error", status: false})
+    const user = await Users.findOne(loginIdentifier);
+    if (!user) {
+      return res.status(400).send('Invalid email or password');
     }
-}
 
-
-module.exports.setAvatar = async (req, res, next) => {
-
-    try {
-        const userId = req.params.id
-        const avatarImage = req.body.image
-
-        if (! userId)
-            return res.json({message: "please login", status: false})
-
-
-
-        if (! avatarImage)
-            return res.json({message: "please select an image", status: false})
-
-
-
-        const updateUserData = await User.findByIdAndUpdate(userId, {
-            isAvatarImageSet: true,
-            avatarImage
-        })
-
-        return await res.status(200).json({isSet: updateUserData.isAvatarImageSet, image: updateUserData.avatarImage})
-
-    } catch (err) {
-        next(err)
+    // Check if password is correct
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
+      return res.status(400).send('Invalid email or password');
     }
-}
 
-
-module.exports.getAllUsers = async (req, res, next) => {
-    try {
-        const allUsers = (await User.find({
-            _id: {
-                $ne: req.params.id
-            }
-        }).select(["email", "username", "avatarImage", "_id"]));
-
-        return res.status(200).json(allUsers)
-
-    } catch (err) {
-        next(err)
-    }
-}
-
-module.exports.getUser = async (req, res, next) => {
-
-    try {
-        const email = req.params.email // before hitting production encrypt the email and decrypt here
-        const current_user = await User.findOne({email})
-
-        if (current_user === null || current_user === undefined) {
-            res.status(400).json({error: "User not found"});
-        } else {
-            res.status(200).json(current_user);
-        }
-
-    } catch (err) {
-        console.log(err)
-    }
-}
+    res.status(200).json({status: true, user})
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error logging in user');
+  }
+};

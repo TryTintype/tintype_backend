@@ -1,133 +1,165 @@
-const mongoose = require('mongoose');
-const {File, FileData, FileRef} = require('../models/newFileHandlerModel');
-const mime = require('mime')
-const crypto = require('crypto');
-const { v4: uuidv4 } = require('uuid');
+// const mongoose = require('mongoose');
+// const {File, FileData, FileRef} = require('../models/fileHandlerModel');
+// const mime = require('mime')
+// const crypto = require('crypto');
+// const {v4: uuidv4} = require('uuid');
 
 
-const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
+// const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
 
-module.exports.uploadFile = async (req, res, next) => {
+// module.exports.uploadFile = async (req, res, next) => {
+//     console.log(req)
+//     const name = req.body.name;
+//     const buffer = req.files[0].buffer;
+//     const owner = req.body.user_id;
+//     const privacy = req.body.privacy || 'private';
 
-    const name = req.body.name
-    const buffer = req.files[0].buffer;
-    const owner = req.body.user_id
-    const privacy = 'private'
-
-    if (! buffer) {
-        throw new Error('No file uploaded');
-    }
-
-    try {
-        const size = buffer.length;
-
-        if (size > MAX_FILE_SIZE) {
-            throw new Error(`File size exceeds limit of ${MAX_FILE_SIZE} bytes`);
-        }
-
-        const checksum = crypto.createHash('sha256').update(buffer).digest('hex');
-
-        const fileData = new FileData({data: buffer});
-        await fileData.save();
-
-        const file = new File({
-            file: fileData._id,
-            mimetype: "application/octet-stream", // this should be dynamic
-            length: size,
-            checksum,
-            uri: `/files/${uuidv4()}`
-        });
-
-        const fileRef = new FileRef({
-            name,
-            file: file._id,
-            owner,
-            privacy: privacy || 'private'
-        });
-
-        await file.save();
-        await fileRef.save();
-        res.status(201).json({message: 'File uploaded successfully'});
-
-    } catch (err) {
-        if (err.code === 11000) {
-            res.status(409).json({error: 'File already exists'});
-        } else {
-            console.log(err);
-            res.status(500).json({error: 'Server error'});
-        }
-    }
-    // return file;
-}
-
-
-module.exports.getFileByUri = async (req, res, next) => {
-    const uri = req.params.uri
-    if (!uri) {
-       return res.status(400).json({message: 'please provide a valid uri'})
-    }
-
-    try {
-        const file = await File.findOne({ uri }).populate('file');
-        console.log({ uri: `/files/${uri}` })
-        if (!file) {
-            return res.status(404).json({message: 'file not found'})
-        }
-        return res.status(200).json(file);
-
-    } catch (err) {
-        res.status(400).json({message: 'an error occurred'})
-    }
-}
-
-// module.exports.getFileByUri = async (req, res, next) => {
-//     const uri = req.body.uri
-//     if (!uri) {
-//        return res.status(400).json({message: 'please provide a valid uri'})
+//     if (!buffer) {
+//         return res.status(400).json({error: 'No file uploaded'});
 //     }
 
 //     try {
-//         const file = await File.findOne({ uri }).populate('file');
+//         const size = buffer.length;
 
-//         if (!file) {
-//             return res.status(404).json({message: 'file not found'})
+//         if (size > MAX_FILE_SIZE) {
+//             return res.status(400).json({error: `File size exceeds the limit of ${MAX_FILE_SIZE} bytes`});
 //         }
-//         return res.json(file);
 
+//         const checksum = crypto.createHash('sha256').update(buffer).digest('hex');
+
+//         const fileData = new FileData({data: buffer});
+//         await fileData.save();
+
+//         const fileRef = new FileRef({name, file: fileData._id, owner, privacy});
+//         await fileRef.save();
+
+//         const file = new File({
+//             file: fileRef._id,
+//             mimetype: req.files[0].mimetype,
+//             length: size,
+//             checksum,
+//             uri: `/files/${
+//                 uuidv4()
+//             }`
+//         });
+//         await file.save();
+
+//         res.status(201).json({message: 'File uploaded successfully'});
 //     } catch (err) {
-//         res.status(400).json({message: 'an error occurred'})
+//         if (err.code === 11000) {
+//             res.status(409).json({error: 'File already exists'});
+//         } else {
+//             console.error(err);
+//             res.status(500).json({error: 'Server error'});
+//         }
 //     }
+// };
+
+
+// module.exports.getFileByUri = async (req, res, next) => {
+//     const uri = req.params.uri;
+//     if (! uri) {
+//         return res.status(400).json({error: 'Please provide a valid URI'});
+//     }
+
+//     try {
+//         const fileRef = await FileRef.findOne({name: uri}).populate('file');
+//         if (! fileRef) {
+//             return res.status(404).json({error: 'File not found'});
+//         }
+
+//         const fileData = await FileData.findById(fileRef.file);
+//         if (! fileData) {
+//             return res.status(404).json({error: 'File data not found'});
+//         }
+
+//         const file = {
+//             name: fileRef.name,
+//             mimetype: fileData.mimetype,
+//             length: fileData.data.length,
+//             createdAt: fileData.createdAt,
+//             uri: fileRef.uri
+//         };
+
+//         return res.status(200).json(file);
+//     } catch (err) {
+//         console.error(err);
+//         return res.status(500).json({error: 'Server error'});
+//     }
+// };
+
+
+// module.exports.getFileByID = async (req, res, next) => {
+//     const fileId = req.params.id;
+//     if (! fileId) {
+//         return res.status(400).json({error: 'Please provide a valid file ID'});
+//     }
+
+//     try {
+//         const fileRef = await FileRef.findById(fileId).populate('file');
+//         if (! fileRef) {
+//             return res.status(404).json({error: 'File not found'});
+//         }
+
+//         const fileData = await FileData.findById(fileRef.file);
+//         if (! fileData) {
+//             return res.status(404).json({error: 'File data not found'});
+//         }
+
+//         const file = {
+//             name: fileRef.name,
+//             mimetype: fileData.mimetype,
+//             length: fileData.data.length,
+//             createdAt: fileData.createdAt,
+//             uri: fileRef.uri
+//         };
+
+//         return res.status(200).json(file);
+//     } catch (err) {
+//         console.error(err);
+//         return res.status(500).json({error: 'Server error'});
+//     }
+// };
+
+// module.exports.getFileByName = async (req, res, next) => {
+//     const name = req.params.name;
+//     if (! name) {
+//         return res.status(400).json({error: 'Please provide a valid file name'});
+//     }
+
+//     try {
+//         const fileRef = await FileRef.findOne({name}).populate('file');
+//         if (! fileRef) {
+//             return res.status(404).json({error: 'File not found'});
+//         }
+
+//         const fileData = await FileData.findById(fileRef.file);
+//         if (! fileData) {
+//             return res.status(404).json({error: 'File data not found'});
+//         }
+
+//         const file = {
+//             name: fileRef.name,
+//             mimetype: fileData.mimetype,
+//             length: fileData.data.length,
+//             createdAt: fileData.createdAt,
+//             uri: fileRef.uri
+//         };
+
+//         return res.status(200).json(file);
+//     } catch (err) {
+//         console.error(err);
+//         return res.status(500).json({error: 'Server error'});
+//     }
+// };
+
+// module.exports.getFileRefsByOwner = async (req, res, next,) => {
+//     const owner = req.body.user_id
+//     return await FileRef.find({owner}).populate('file');
 // }
 
-module.exports.getFileByID = async (req, res, next) => {
-    const _id = req.params.id
-    if (!_id) {
-       return res.status(400).json({message: 'please provide a valid id'})
-    }
 
-    console.log(_id)
-
-    try {
-        const file = await File.findOne({
-            _id: {
-                $ne: req.params.id
-            }
-        }).populate('file');
-
-        if (!file) {
-            return res.status(404).json({message: 'file not found'})
-        }
-        return res.json(file);
-
-    } catch (err) {
-        res.status(400).json({message: 'an error occurred'})
-    }
-}
-
-module.exports.getFileRefsByOwner = async (req, res, next,) => {
-    const owner = req.body.user_id
-    return await FileRef.find({owner}).populate('file');
-}
+//!! HERE!!!
 
 // module.exports = {
 //     // uploadFile,

@@ -6,7 +6,7 @@ const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
 
 module.exports.UploadFile = async (req, res, next) => {
     try {
-        const name = req.body.name
+        const name = req.body.name //add option to name file
         const buffer = req.file.buffer;
         const userId = req.body.user_idx
 

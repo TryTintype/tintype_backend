@@ -1,4 +1,10 @@
 var multer = require('multer');
 var storage = multer.memoryStorage();
 var multerUploads = multer({ storage }).any();
-module.exports = multerUploads;
+
+
+
+const upload = multer({ storage });
+
+
+module.exports = { multerUploads, upload };

@@ -5,7 +5,8 @@ const mongoose = require("mongoose")
 const usersRoute = require("./routes/usersRoute")
 const messagesRoutes = require("./routes/messagesRoute")
 const fileRoute = require("./routes/fileRoute")
-const fileHandlerRoute = require("./routes/fileHandlerRoute")
+
+const errorHandler = require("./middlewares/errorHandler")
 
 require("dotenv").config()
 
@@ -15,14 +16,15 @@ const app = express()
 
 app.use(cors())
 app.use(express.json())
-app.use(express.urlencoded({extended: false}));
+app.use(express.urlencoded({ extended: false }));
 
 app.use("/api", usersRoute)
 app.use("/api/message", messagesRoutes)
-// app.use("/api", fileHandlerRoute)
-app.use("/api", fileRoute)
+app.use("/api/file", fileRoute)
 
-const uri = 
+app.use(errorHandler)
+
+const uri =
 // process.env.NODE_ENV === "development" ?
 process.env.MONGO_URL_DEV
 // :

@@ -4,153 +4,159 @@ const crypto = require('crypto');
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
 
-
 module.exports.UploadFile = async (req, res, next) => {
     try {
-
         const name = req.body.name
         const buffer = req.file.buffer;
-        // const ownerId = req.user._id; Assuming the user ID is stored in req.user
-        const userId = req.body.user_id
-
-        // console.error(req.file);
-
+        const userId = req.body.user_idx
 
         const size = buffer.length;
         if (size > MAX_FILE_SIZE) {
-            return res.status(400).json({error: `File size exceeds the limit of ${MAX_FILE_SIZE} bytes`});
+            throw new Error(`File size exceeds the limit of ${MAX_FILE_SIZE} bytes`)
+            // return res.status(400).json({error: `File size exceeds the limit of ${MAX_FILE_SIZE} bytes`});
         }
 
-        const { visibility } = req.body;
+        const {visibility} = req.body;
         const file = req.file;
 
-        console.log(file)
         if (!file) {
-          return res.status(400).json({ message: 'No file provided' });
+            throw new Error('No file provided')
+            // return res.status(400).json({message: 'No file provided'});
         }
 
         const md5 = crypto.createHash('md5').update(file.buffer).digest('hex');
 
         // Save file data to the database
         const newFile = new File({
-          data: file.buffer,
-          mimetype: file.mimetype,
-          length: file.size,
-          md5: md5 || '' // Use the md5 provided by multer or an empty string
+            data: file.buffer,
+            mimetype: file.mimetype,
+            length: file.size,
+            md5: md5
         });
 
         const savedFile = await newFile.save();
 
         // Save file reference to the database
         const newFileRef = new FileRef({
-          name: file.originalname,
-          file: savedFile._id,
-          owner: userId,
-          visibility: visibility || 'private'
+            name: file.originalname,
+            file: savedFile._id,
+            owner: userId,
+            visibility: visibility || 'private'
         });
 
         const savedFileRef = await newFileRef.save();
         res.status(201).json(savedFileRef);
-      } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error uploading filexx' });
-      }
+    } catch (error) {
+        next(error)
     }
+}
 
-// module.exports.UploadFile = async (req, res, next) => {
-//     try {
-//         const name = req.body.name
-//         const fileBuffer = req.files[0].buffer;
-//         // const ownerId = req.user._id; Assuming the user ID is stored in req.user
-//         const ownerId = req.body.user_id
+module.exports.downloadFile = async (req, res, next) => {
+    try {
+      const fileId = req.params.id;
 
+      // Retrieve the file reference from the FileRef collection
+      const fileRef = await FileRef.findById(fileId);
 
-//         if (! fileBuffer) {
-//             throw new Error('No file uploaded');
-//         }
+      if (!fileRef) {
+        throw new Error('File not found' )
+        // return res.status(404).json({ message: 'File not found' });
+      }
 
-//         const md5 = crypto.createHash('md5').update(fileBuffer).digest('hex');
+      // Retrieve the file data from the File collection
+      const file = await File.findById(fileRef.file);
 
-//         const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
-//             chunkSizeBytes: 1024 * 1024,
-//             bucketName: 'fileUploads'
-//         });
+      if (!file) {
+        throw new Error('File data not found' )
+        // return res.status(404).json({ message: 'File data not found' });
+      }
 
-//         const uploadStream = bucket.openUploadStream(name, {
-//             metadata: {
-//                 md5: md5,
-//                 owner: ownerId
-//             }
-//         });
+      // Set the response headers and send the file data
+      res.setHeader('Content-Type', file.mimetype);
+      res.setHeader('Content-Length', file.length);
+      res.setHeader('Content-Disposition', `attachment; filename=${fileRef.name}`);
+      res.send(file.data);
+    } catch (error) {
+        next(error)
+    //   console.error(error);
+    //   res.status(500).json({ message: 'Error downloading file' });
+    }
+  };
 
-//         uploadStream.write(fileBuffer);
-//         uploadStream.end();
+  module.exports.fetchAllFiles = async (req, res, next) => {
+    // /files/all?page=1&itemsPerPage=10
+    try {
+      const page = parseInt(req.params.pageNumber) || 1; // Default to page 1
+      const itemsPerPage = 10; // Default to 10 items per page
 
-//         uploadStream.on('finish', async () => {
-//             const fileId = uploadStream.id;
+      // Calculate the number of documents to skip
+      const skip = (page - 1) * itemsPerPage;
 
-//             const uploadedFile = new File({data: fileBuffer, mimetype: req.files[0].mimetype, length: fileBuffer.length, md5: md5});
-//             await uploadedFile.save();
+      // Retrieve the paginated file references from the FileRef collection
+      const fileRefs = await FileRef.find()
+        .skip(skip)
+        .limit(itemsPerPage);
 
-//             const fileRef = new FileRef({name: name, file: uploadedFile._id, owner: ownerId});
-//             await fileRef.save();
+      // Return the file references as a JSON response
+      res.status(200).json(fileRefs);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Error fetching files' });
+    }
+  };
 
-//             res.status(201).json({message: 'File uploaded successfully'});
-//         });
+module.exports.deleteFile = async (req, res, next) => {
+    try {
+      const fileId = req.params.id;
 
-//         uploadStream.on('error', (err) => {
-//             throw new Error('File upload failed');
-//         });
-//     } catch (err) {
-//         next(err);
-//     }
-// };
+      // Retrieve the file reference from the FileRef collection
+      const fileRef = await FileRef.findById(fileId);
 
+      if (!fileRef) {
+        return res.status(404).json({ message: 'File not found' });
+      }
 
-// module.exports.UploadFile = async (req, res, next) => {
-//         console.log(req)
-//         const name = req.body.name;
-//         const buffer = req.files[0].buffer;
-//         const owner = req.body.user_id;
-//         const privacy = req.body.privacy || 'private';
+      // Delete the file data from the File collection
+      await File.findByIdAndDelete(fileRef.file);
 
-//         if (!buffer) {
-//             return res.status(400).json({error: 'No file uploaded'});
-//         }
+      // Delete the file reference from the FileRef collection
+      await FileRef.findByIdAndDelete(fileId);
 
-//         try {
-//             const size = buffer.length;
+      // Return a success message as the response
+      res.status(200).json({ message: 'File deleted successfully' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Error deleting file' });
+    }
+  };
 
-//             if (size > MAX_FILE_SIZE) {
-//                 return res.status(400).json({error: `File size exceeds the limit of ${MAX_FILE_SIZE} bytes`});
-//             }
+  module.exports.deleteMultipleFiles = async (req, res, next) => {
+    try {
+      const fileIds = req.body.fileIds; // Assuming fileIds is an array of file IDs
 
-//             const checksum = crypto.createHash('sha256').update(buffer).digest('hex');
+        if (fileIds.length < 1) {
+           return res.status(401).json({ message: 'no files to delete' });
+        }
+      // Loop through each file ID and delete the corresponding files
+      for (const fileId of fileIds) {
+        // Retrieve the file reference from the FileRef collection
+        const fileRef = await FileRef.findById(fileId);
 
-//             const fileData = new FileData({data: buffer});
-//             await fileData.save();
+        if (!fileRef) {
+          return res.status(404).json({ message: `File with ID ${fileId} not found` });
+        }
 
-//             const fileRef = new FileRef({name, file: fileData._id, owner, privacy});
-//             await fileRef.save();
+        // Delete the file data from the File collection
+        await File.findByIdAndDelete(fileRef.file);
 
-//             const file = new File({
-//                 file: fileRef._id,
-//                 mimetype: req.files[0].mimetype,
-//                 length: size,
-//                 checksum,
-//                 uri: `/files/${
-//                     uuidv4()
-//                 }`
-//             });
-//             await file.save();
+        // Delete the file reference from the FileRef collection
+        await FileRef.findByIdAndDelete(fileId);
+      }
 
-//             res.status(201).json({message: 'File uploaded successfully'});
-//         } catch (err) {
-//             if (err.code === 11000) {
-//                 res.status(409).json({error: 'File already exists'});
-//             } else {
-//                 console.error(err);
-//                 res.status(500).json({error: 'Server error'});
-//             }
-//         }
-//     };
+      // Return a success message as the response
+      res.status(200).json({ message: 'Files deleted successfully' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Error deleting files' });
+    }
+  };

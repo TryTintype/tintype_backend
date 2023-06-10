@@ -1,14 +1,13 @@
 
 const router = require("express").Router()
-const { UploadFile } = require("../controller/fileController")
-const multerMiddleware = require("../middlewares/multer")
-
-var multer = require('multer');
-
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
+const { multerUploads, upload } = require("../middlewares/multer")
+const { UploadFile, downloadFile, fetchAllFiles, deleteFile, deleteMultipleFiles} = require("../controller/fileController")
 
 
 router.post('/file-upload', upload.single('file'), UploadFile);
+router.post('/file-download/:id', downloadFile);
+router.post('/page/:pageNumber', fetchAllFiles);
+router.post('/delete-file/:fileId', deleteFile)
+router.post('/delete-selected-file', deleteMultipleFiles)
 
 module.exports = router

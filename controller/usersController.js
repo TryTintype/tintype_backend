@@ -51,18 +51,18 @@ module.exports.login = async (req, res, next) => {
 
     const user = await Users.findOne(loginIdentifier);
     if (!user) {
-      return res.status(400).send('Invalid email or password');
+        return res.status(400).json({ message: 'Invalid email or password' });
     }
 
     // Check if password is correct
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
-      return res.status(400).send('Invalid email or password');
+        return res.status(400).json({ message: 'Invalid email or password' });
     }
 
     res.status(200).json({status: true, user})
   } catch (error) {
     console.error(error);
-    res.status(500).send('Error logging in user');
+      res.status(500).json({ message: 'Error logging in user' });
   }
 };
